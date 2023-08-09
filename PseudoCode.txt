@@ -9,10 +9,10 @@ n = 4
 
 # define other basic constansts
 satisfaction = 0
-wait_t = 1000       # 1s
+wait_t = 50         # 50ms
 d_thresh = 1        # mm
 a_thresh = 1        # degree(s)
-p_thersh = 1/1000   # arbitrary
+p_thersh = 1/100    # arbitrary
 
 # create a marker structure/list- OR COULD WE USE A CLASS LIKE IN CPP ? Like an "ROIframe" class with attributes a
 # vector of "marker" type subclass. And all functions until the "main" tag be put into methods.
@@ -26,6 +26,8 @@ def recognize_markers(&video_input, &marker_list, &marker_correction, &satisfact
     # function that computes angles and offsets to correct, to be added into recognize_markers.
     def compute_marker_correction(marker_list, &marker_correction) :
     def compute_satisfaction(marker_list, marker_correction, &satisfaction) :
+
+// //faire un case break si n'en voit pas 4.
 
 # main
 
@@ -42,7 +44,7 @@ def set_camera(&video_input, &marker_list, &marker_correction, &satisfaction, n)
     while (marker_list.size != n) :
         if (marker_list.size >= n) :
             print " Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility."
-        if (marker_list.size <= n) :
+        if (marker_list.size < n) :
             print " Make sure all (n) markers are visible by the camera. Not enough were recognized."  
         wait (wait_t) 
         recognize_markers(&video_input, &marker_list, n)
@@ -53,6 +55,7 @@ def set_camera(&video_input, &marker_list, &marker_correction, &satisfaction, n)
         wait (wait_t) 
         recognize_markers(&video_input, &marker_list, n)
 
+//  using the roi midplane to align with current framing midplane
     # Fit the center of the ROI to current footage center point (Ry, Rz, Ty)
     while ((marker_correction.ROI_center_y != 0.5*image_size_y+- p_thersh)
      or (marker_correction.ROI_center_z != 0.5*image_size_z+- 1/1000)) :     # while ROI and footage centered are not corresponding
@@ -60,19 +63,29 @@ def set_camera(&video_input, &marker_list, &marker_correction, &satisfaction, n)
             print "Turn camera left (+Ry)."
         if (marker_correction.ROI_center_z < 0.5*image_size_z+- p_thersh) :
             print "Turn camera right (-Ry)." 
-        if (abs(marker_correction.A_Rz) > a_thresh) :  # degree
-            print "Turn camera (A_Rz) degrees up (+) /down (-) (Rz)." 
-        if (abs(marker_correction.D_Ty) > d_thresh) :  # mm
-            print "Slide camera (D_Ty) mm(s) up (+) /down (-) (Ty)." 
+        wait (wait_t) 
+        recognize_markers(&video_input, &marker_list, n)
+
+    while (abs(marker_correction.A_Rz) > a_thresh) :  # degree
+        print "Turn camera (A_Rz) degrees up (+) /down (-) (Rz)." 
+        wait (wait_t) 
+        recognize_markers(&video_input, &marker_list, n)
+
+//  using the roi midplane to align with current framing midplane
+    # assuming that Rz and Ty can be considered independent as long as we see all markers, given camera self correction
+    while (abs(marker_correction.D_Ty) > d_thresh) :  # mm
+        print "Slide camera (D_Ty) mm(s) up (+) /down (-) (Ty)." 
         wait (wait_t) 
         recognize_markers(&video_input, &marker_list, n)
     
+
+// reecrire avec aire roi /aire visible par camera -> valeure objectif (typiquement 0.8)
     # Fit the Tx distance using the pre-defined "perfect margins" from edge of footage frame to markers.
     # By default I suggest using the bottom left marker (BL), and we only need to verify one alignement, so arbitrarily we using d.
-    while (marker_list(1).z != d +- p_thersh) :     # while the BL marker left spacing (simply its z value) isn't right, figure out Tx distance.
-        if (marker_list(1).z < d +- p_thersh) :
+    while (marker_list(1).z != c +- p_thersh) :     # while the BL marker left spacing (simply its z value) isn't right, figure out Tx distance.
+        if (marker_list(1).z < c +- p_thersh) :
             print " Camera too close from object. Slide camera a little further from the hive (-Tx)."  
-        if (marker_list(1).z > d +- p_thersh) :
+        if (marker_list(1).z > c +- p_thersh) :
             print " Camera too far from object. Slide camera a little closer to the hive (+Tx)."  
         wait (wait_t) 
         recognize_markers(&video_input, &marker_list, n)
