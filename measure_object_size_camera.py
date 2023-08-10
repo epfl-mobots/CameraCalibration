@@ -31,6 +31,10 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
+
+#Aruco Marker list
+marker_list = []
+
 while True:
     _, img = cap.read()
 
@@ -55,6 +59,8 @@ while True:
             # Get rect
             rect = cv2.minAreaRect(cnt)
             (x, y), (w, h), angle = rect
+   
+            marker_list.append((x, y))
 
             # Get Width and Height of the Objects by applying the Ratio pixel to cm
             #object_width = w / pixel_cm_ratio
@@ -72,9 +78,13 @@ while True:
 
 
     cv2.imshow("Image", img)
-    key = cv2.waitKey(1)
+    key = cv2.waitKey(1)        #take anew picture every 1ms
     if key == 27:
         break
+
+#Print center coordinates of markers
+for val in marker_list:
+    print(val, end=" ")
 
 cap.release()
 cv2.destroyAllWindows()
