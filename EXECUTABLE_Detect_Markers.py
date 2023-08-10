@@ -35,49 +35,64 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 #img = cv2.imread("phone_aruco_marker.jpg")   #define image to analyse
 
 #Aruco Marker list
-marker_list = []
+# marker_list = []
 
-while True:
-    _, img = cap.read()
+def read_markers() :
 
-    # Get Aruco marker
-    corners, _, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
-    if corners:
+    while True:
+        _, img = cap.read()
 
-        # Draw polygon around the marker
-        int_corners = np.int0(corners)
-        cv2.polylines(img, int_corners, True, (0, 255, 0), 5)
+        # Get Aruco marker
+        corners, _, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
+        if corners:
 
-        #contours = detector.detect_objects(img)
+            # Draw polygon around the marker
+            int_corners = np.int0(corners)
+            cv2.polylines(img, int_corners, True, (0, 255, 0), 5)
 
-        # Draw objects boundaries
-        for cnt in corners:
-            # Get rect
-            rect = cv2.minAreaRect(cnt)
-            (x, y), (w, h), angle = rect
-   
-            marker_list.append((x, y))
+            #contours = detector.detect_objects(img)
 
-            # Display rectangle
-            box = cv2.boxPoints(rect)
-            box = np.int0(box)
+            # Draw objects boundaries
+            for cnt in corners:
+                # Get rect
+                rect = cv2.minAreaRect(cnt)
+                (x, y), (w, h), angle = rect
+                # Selecting number of significant digits and pushing into list
+                x_rounded = round(x,3)
+                y_rounded = round(y,3)
+                marker_list.append((x_rounded, y_rounded))
 
-            cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
+                # Display rectangle
+                box = cv2.boxPoints(rect)
+                box = np.int0(box)
 
-    cv2.imshow("Image", img)
-    key = cv2.waitKey(1)        #take anew picture every 1ms
-    if key == 27:
-        break
+                cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
 
-#Print center coordinates of markers
-for val in marker_list:
-    print(val, end=" ")
+        cv2.imshow("Image", img)
+        key = cv2.waitKey(10000)        #take a new picture every 10 000ms
+        if key == 27:
+            break
 
-cap.release()
-cv2.destroyAllWindows()
+    #Print center coordinates of markers
+    for val in marker_list:
+        print(val, end=" ")
 
-# if __name__ == "__main__":
+    cap.release()
+    cv2.destroyAllWindows()
+
+# def logic(marker_list_) :
+    
+#     for val in marker_list_:
+#         print(val, end=" ")
+
+if __name__ == "__main__":
+
+    marker_list = []
+    marker_list = read_markers()
+    #logic(marker_list)
 #     while
 #     take_image
 #     centred <0 detect markers
 #     logic()
+
+
