@@ -43,17 +43,17 @@ def read_markers() :
         _, img = cap.read()
 
         # Get Aruco marker
-        corners, _, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
+        corners, marker_id, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
         if corners:
 
             # Draw polygon around the marker
-            int_corners = np.int0(corners)
+            int_corners = np.intp(corners)
             cv2.polylines(img, int_corners, True, (0, 255, 0), 5)
 
             #contours = detector.detect_objects(img)
 
             # Draw objects boundaries
-            for cnt in corners:
+            for cnt in int_corners:
                 # Get rect
                 rect = cv2.minAreaRect(cnt)
                 (x, y), (w, h), angle = rect
@@ -61,10 +61,10 @@ def read_markers() :
                 x_rounded = round(x,3)
                 y_rounded = round(y,3)
                 marker_list.append((x_rounded, y_rounded))
-
+                #print (marker_id[cnt][0]) #doesn't work
                 # Display rectangle
                 box = cv2.boxPoints(rect)
-                box = np.int0(box)
+                box = np.intp(box)
 
                 cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
 
