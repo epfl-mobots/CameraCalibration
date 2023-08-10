@@ -1,0 +1,29 @@
+boltons @ file:///home/conda/feedstock_root/build_artifacts/boltons_1677499911949/work
+Brotli @ file:///C:/ci_311/brotli-split_1676435766766/work
+certifi==2023.7.22
+cffi @ file:///C:/ci_311/cffi_1676423759166/work
+charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1688813409104/work
+colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1666700638685/work
+conda @ file:///D:/bld/conda_1690553091841/work
+conda-package-handling @ file:///home/conda/feedstock_root/build_artifacts/conda-package-handling_1691048088238/work
+conda_package_streaming @ file:///home/conda/feedstock_root/build_artifacts/conda-package-streaming_1691009212940/work
+cryptography @ file:///C:/b/abs_13590mi9q9/croot/cryptography_1689373706078/work
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
+jsonpatch @ file:///home/conda/feedstock_root/build_artifacts/jsonpatch_1632759296524/work
+jsonpointer==2.0
+menuinst @ file:///D:/bld/menuinst_1666840069166/work
+numpy==1.25.2
+opencv-contrib-python==4.6.0.66
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1681337016113/work
+pluggy @ file:///home/conda/feedstock_root/build_artifacts/pluggy_1687776318736/work
+pycosat @ file:///C:/ci_311/pycosat_1676438455539/work
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
+pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1685514481738/work
+PySocks @ file:///D:/bld/pysocks_1661604991356/work
+requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1684774241324/work
+ruamel.yaml @ file:///C:/ci_311/ruamel.yaml_1676439214109/work
+toolz @ file:///home/conda/feedstock_root/build_artifacts/toolz_1657485559105/work
+tqdm @ file:///home/conda/feedstock_root/build_artifacts/tqdm_1691545579536/work
+urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1689789803562/work
+win-inet-pton @ file:///D:/bld/win_inet_pton_1667051142467/work
+zstandard==0.19.0
