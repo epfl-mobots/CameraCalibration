@@ -1,4 +1,5 @@
-# Script by Nicolas Robson, under supervision of Cyril Monette 2023
+# Initial script by Sergio Canu (pysource.com), edited by
+#   Nicolas Robson, under supervision of Cyril Monette 2023
 #
 # This scipt enables detecting Aruco markers OF A SPECIFIC SIZE (proportions).
 # It will open the (specified #) camera for real time analysis
@@ -45,28 +46,28 @@ while True:
         aruco_perimeter = cv2.arcLength(corners[0], True)
 
         # Pixel to cm ratio
-        pixel_cm_ratio = aruco_perimeter / 20
+        #pixel_cm_ratio = aruco_perimeter / 20
 
-        contours = detector.detect_objects(img)
+        #contours = detector.detect_objects(img)
 
         # Draw objects boundaries
-        for cnt in contours:
+        for cnt in corners:
             # Get rect
             rect = cv2.minAreaRect(cnt)
             (x, y), (w, h), angle = rect
 
             # Get Width and Height of the Objects by applying the Ratio pixel to cm
-            object_width = w / pixel_cm_ratio
-            object_height = h / pixel_cm_ratio
+            #object_width = w / pixel_cm_ratio
+            #object_height = h / pixel_cm_ratio
 
             # Display rectangle
             box = cv2.boxPoints(rect)
             box = np.int0(box)
 
             cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
-            cv2.polylines(img, [box], True, (255, 0, 0), 2)
-            cv2.putText(img, "Width {} cm".format(round(object_width, 1)), (int(x - 100), int(y - 20)), cv2.FONT_HERSHEY_PLAIN, 2, (100, 200, 0), 2)
-            cv2.putText(img, "Height {} cm".format(round(object_height, 1)), (int(x - 100), int(y + 15)), cv2.FONT_HERSHEY_PLAIN, 2, (100, 200, 0), 2)
+            #cv2.polylines(img, [box], True, (255, 0, 0), 2)
+            #cv2.putText(img, "Width {} cm".format(round(object_width, 1)), (int(x - 100), int(y - 20)), cv2.FONT_HERSHEY_PLAIN, 2, (100, 200, 0), 2)
+            #cv2.putText(img, "Height {} cm".format(round(object_height, 1)), (int(x - 100), int(y + 15)), cv2.FONT_HERSHEY_PLAIN, 2, (100, 200, 0), 2)
 
 
 
@@ -77,3 +78,9 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+
+# if __name__ == "__main__":
+#     while
+#     take_image
+#     centred <0 detect markers
+#     logic()
