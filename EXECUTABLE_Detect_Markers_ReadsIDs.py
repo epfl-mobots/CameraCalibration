@@ -18,6 +18,7 @@
 import cv2
 import numpy as np
 import keyboard
+import time
 from object_detector import *
 
 # Load Aruco detector
@@ -58,13 +59,14 @@ class Marker:
 
 
 def read_markers():
-    marker_list = []
     
     while True:
         _, img = cap.read()
-
+        marker_list = []
+        
         # Detect Aruco markers
         corners, ids, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
+        print("WentThroughDetection")
 
         if ids is not None:
             for i, corner in enumerate(corners):
@@ -76,7 +78,7 @@ def read_markers():
                 # Calculate the center of the marker
                 center = tuple(np.mean(int_corner[0], axis=0).astype(int))
 
-                marker = Marker(center[0], center[1], ids[i][0])
+                marker = Marker(center[0], center[1], ids[i][0])           
                 marker_list.append(marker)
 
                 # Draw red circle at the center
@@ -87,21 +89,38 @@ def read_markers():
                 
 
         cv2.imshow("Image", img)
-        key = cv2.waitKey(10000)  # take a new picture every 10 000ms
+        key = cv2.waitKey(1000)  # take a new picture every 10 000ms
         if key == 27:
             break
 
     cap.release()
     cv2.destroyAllWindows()
+
     return marker_list
+
 
 def set_camera(marker_list):
 
+    n = 4  # Expected number of markers
+    wait_t = 5  # Waiting time in seconds
+
+    # Make sure all markers are visible, else move back. Assuming the camera is roughly aligned before starting this program.
+    while len(marker_list) != n:
+        if len(marker_list) > n:
+            print("Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility.")
+        else:
+            print("Make sure all (4) markers are visible by the camera. Not enough were recognized.")
+        
+        time.sleep(wait_t)
+        print("Let's see if they are all visible now.")
+        marker_list = read_markers()  # Update the marker list
+        
     for marker in marker_list:
         print(marker)
         print(marker.ID)
         print(marker.x)
-    return
+
+    return 
 
 def intro_soft():
 
@@ -114,13 +133,11 @@ def intro_soft():
         
         if event.event_type == keyboard.KEY_DOWN:
             if event.name == 'c':
-                return
-            elif event.name == 'esc':
-                break
-    return
+                 return
+            
 
 if __name__ == "__main__":
-    
+
     intro_soft()
     marker_list = read_markers()
     set_camera(marker_list)
