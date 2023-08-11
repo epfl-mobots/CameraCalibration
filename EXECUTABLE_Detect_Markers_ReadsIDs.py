@@ -1,5 +1,23 @@
+# Script by Nicolas Robson, under supervision of Cyril Monette 2023 EPFL
+# Based on an OpenCV script by Sergio Canu (pysource.com)
+# 
+# This script enables detecting Aruco markers OF A SPECIFIC SIZE (proportions).
+# It will open the (specified #) camera for real time analysis
+# Press "Esc" (27th key of keyboard) to kill program.
+#
+# make sure you have OpenCv-contrib installed and 'keyboard'
+# $pip install opencv-contrib-python
+# $pip3 install keyboard
+#
+# Thanks and full credits to pysource.com for the computer vision part
+# https://www.youtube.com/watch?v=lbgl2u6KrDU
+#
+# Further informations by Core Electronics https://www.youtube.com/watch?v=Qf55aUgfLfQ
+#
+#
 import cv2
 import numpy as np
+import keyboard
 from object_detector import *
 
 # Load Aruco detector
@@ -77,11 +95,35 @@ def read_markers():
     cv2.destroyAllWindows()
     return marker_list
 
-if __name__ == "__main__":
-    marker_data = read_markers()
+def set_camera(marker_list):
 
-    for marker in marker_data:
+    for marker in marker_list:
         print(marker)
         print(marker.ID)
         print(marker.x)
+    return
+
+def intro_soft():
+
+    print("Hello, welcome to this camera setup assistant.")
+    print("Please make sure you are roughly aligned with the markers and the 4 are visible, before continuing.")
+    print("To continue, press 'C' on the keyboard (key #67).")
+  
+    while True:
+        event = keyboard.read_event()
+        
+        if event.event_type == keyboard.KEY_DOWN:
+            if event.name == 'c':
+                return
+            elif event.name == 'esc':
+                break
+    return
+
+if __name__ == "__main__":
+    
+    intro_soft()
+    marker_list = read_markers()
+    set_camera(marker_list)
+
+    
     
