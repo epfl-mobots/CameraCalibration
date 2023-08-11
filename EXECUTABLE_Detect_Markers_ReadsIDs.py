@@ -61,6 +61,7 @@ class Marker:
 def read_markers():
     
     while True:
+        
         _, img = cap.read()
         marker_list = []
         
