@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import keyboard
 import time
+import math
+import sys
 from object_detector import *
 
 # Load Aruco detector
@@ -96,28 +98,23 @@ def countIsValid(marker_list):
 
     n = 4  # Expected number of markers
     wait_t = 3  # Waiting time in seconds
-    test_n_markers = False
-    # Make sure all markers are visible, else move back. Assuming the camera is roughly aligned before starting this program.
 
     if len(marker_list) == n:
         print("Valid marker count.")
-        test_n_markers = True
+        return True
 
+    elif len(marker_list) == 0:
+        print("Let's do our first marker reading.")
     elif len(marker_list) < n:
         print("Make sure all (4) markers are visible by the camera. Not enough were recognized.")
-        test_n_markers = False
-        time.sleep(wait_t)
-        print("Let's see if they are all visible now.")
-        time.sleep(0.5*wait_t)
-
-    else : 
+    else:
         print("Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility.")
-        test_n_markers = False
-        time.sleep(wait_t)
-        print("Let's see if they are all visible now.")
-        time.sleep(0.5*wait_t)
 
-    return test_n_markers
+    time.sleep(wait_t)
+    print("Let's see if they are all visible now.")
+    time.sleep(0.5*wait_t)
+
+    return False
 
 
 def intro_soft():
@@ -132,21 +129,78 @@ def intro_soft():
         if event.event_type == keyboard.KEY_DOWN:
             if event.name == 'c':
                  return
-   
+
+def NewAcquisition():
+
+    count = 0
+
+    marker_list = read_markers()
+
+    while not countIsValid(marker_list):
+        count = count + 1
+        if count >= 5:
+            print("Too many errors counting markers.")
+            sys.exit(1)
+        else:
+            marker_list = read_markers()
+
+    return marker_list
+
+def Rx_Feedback(marker_list):
+
+    X_BL = 0
+    X_BR = 0
+    X_TL = 0
+    X_TR = 0
+
+    Y_BL = 0
+    Y_BR = 0
+    Y_TL = 0
+    Y_TR = 0
+ 
+    for marker in marker_list:
+        if marker.role == "BL":
+            X_BL = marker.x
+            Y_BL = marker.y
+        elif marker.role == "BR":
+            X_BR = marker.x
+            Y_BR = marker.y
+        elif marker.role == "TL":
+            X_TL = marker.x
+            Y_TL = marker.y
+        elif marker.role == "TR":
+            X_TR = marker.x
+            Y_TR = marker.y
+
+    #Computing the average Rx ("Twist") angle, seen from top and bottom
+    B_Rx_rad = math.atan((Y_BL-Y_BR)/(X_BR-X_BL))
+    B_Rx_deg = math.degrees(B_Rx_rad)
+    A_Rx_rad = math.atan((Y_TL-Y_TR)/(X_TR-X_TL))
+    A_Rx_deg = math.degrees(A_Rx_rad)
+    Rx_offset = round(abs((B_Rx_deg + A_Rx_deg) / 2), 1)
+
+    #Center of RoI given by the 4 markers' coordinates
+    RoI_x = round(np.mean([X_BL, X_BR, X_TL, X_TR]), 0)
+    RoI_y = round(np.mean([Y_BL, Y_BR, Y_TL, Y_TR]), 0)
+
+    # ret, img = cap.read()
+    # RoIcenter = (RoI_x, RoI_y)
+    # cv2.circle(img, RoIcenter, 5, (0, 0, 255), -1)
+
+    return Rx_offset, RoI_x, RoI_y  
 
 if __name__ == "__main__":
 
-    count = 0
+    a_thresh = 1    #1degree angular threshold
     
     intro_soft()
-    marker_list = read_markers()
-    while (not countIsValid(marker_list)):
-        count = count + 1
-        if count >= 10:
-            print("Too many errors counting markers.")
-            break
-        else :
-            marker_list = read_markers()
+    marker_list = NewAcquisition()
+
+    Rx_offset, RoI_x, RoI_y = Rx_Feedback(marker_list)
+
+    print(f"Twist camera along Rx = {Rx_offset} degrees")
+    if abs(Rx_offset) > 1:
+        print(f"Twist camera along Rx by {Rx_offset} degrees")
 
     print("----Final Marker list----")
     for marker in marker_list:
