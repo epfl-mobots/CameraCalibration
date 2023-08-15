@@ -4,6 +4,7 @@ import keyboard
 import time
 import math
 import sys
+from shapely.geometry import Polygon
 from object_detector import *
 
 # Load Aruco detector
@@ -58,6 +59,7 @@ def NewAcquisition():
 
     #Now that we are sure to have a valid New Acquisition, we can compute the overall satisfaction index
     satisfaction = GetSatisfaction(marker_list, corr_metrics)
+    print("Valid Acquisition")
 
     return marker_list, corr_metrics, satisfaction
 
@@ -90,6 +92,13 @@ def ReadMarkers():
     marker_list = []
     corr_metrics = []
 
+    # Test
+    marker1 = Marker(0, 0, 1)
+    marker2 = Marker(10, 0, 2)
+    marker3 = Marker(10, 12, 3)
+    marker4 = Marker(0, 10, 4)
+    marker_list = [marker1, marker2, marker3, marker4]
+
     #To fill last
 
     corr_metrics = GetCorrMetrics(marker_list)
@@ -106,14 +115,41 @@ def GetCorrMetrics(marker_list):
     return corr_metrics
 
 
-
 def GetSatisfaction(marker_list, corr_metrics):
+    #Hard coding our ideal frame
+    Ideal_TL = Marker(0, 0, 1)
+    Ideal_TR = Marker(10, 0, 2)
+    Ideal_BR = Marker(10, 10, 3)
+    Ideal_BL = Marker(0, 10, 4)
+    IdealFrame_marker_list = [Ideal_TL, Ideal_TR, Ideal_BR, Ideal_BL]
 
+    # Define the custom order using a dictionary
+    role_order = {"BL": 1, "BR": 2, "TR": 3, "TL": 4}
 
-    satisfaction = 0
+    # Use the dictionary in a lambda function to sort the lists
+    sorted_markers = sorted(marker_list, key=lambda marker: role_order.get(marker.role, 5))
+    sorted_ideal_markers = sorted(IdealFrame_marker_list, key=lambda marker: role_order.get(marker.role, 5))
+
+    # Form detected and ideal polygons using the sorted lists
+    detected_polygon = Polygon([(marker.x, marker.y) for marker in sorted_markers])
+    ideal_polygon = Polygon([(marker.x, marker.y) for marker in sorted_ideal_markers])
+    
+    if not detected_polygon.is_valid:
+        print("Detected polygon is invalid!")
+        sys.exit(1)
+    if not ideal_polygon.is_valid:
+        print("Ideal polygon is invalid!")
+        sys.exit(1)
+
+    # Calculate the overlapping/union area
+    intersection_area = detected_polygon.intersection(ideal_polygon).area
+    union_polygon = detected_polygon.union(ideal_polygon)
+    union_area = union_polygon.area
+
+    # Calculate satisfaction as the ratio of overlap to ideal area
+    satisfaction = intersection_area / union_area
 
     return satisfaction
-
 
 
 def IntroSoft():
@@ -128,8 +164,6 @@ def IntroSoft():
         if event.event_type == keyboard.KEY_DOWN:
             if event.name == 'c':
                  return
-    
-    return
 
 
 
@@ -166,4 +200,7 @@ if __name__ == "__main__":
 
         WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
         Timer()
+        print(f"Satisfaction is {satisfaction} .")
         marker_list, corr_metrics, satisfaction = NewAcquisition()
+
+    print(f"----Final satisfaction is {satisfaction}----")
