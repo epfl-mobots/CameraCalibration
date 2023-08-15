@@ -94,8 +94,8 @@ def ReadMarkers():
 
     # Test
     marker1 = Marker(0, 0, 1)
-    marker2 = Marker(10, 0, 2)
-    marker3 = Marker(10, 12, 3)
+    marker2 = Marker(9, 1, 2)
+    marker3 = Marker(10, 11, 3)
     marker4 = Marker(0, 10, 4)
     marker_list = [marker1, marker2, marker3, marker4]
 
@@ -174,6 +174,20 @@ def GetCorrMetrics(marker_list):
     corr_metrics.append(Ry_corr_needed)
     corr_metrics.append(Ry_pixel_offset)
 
+    #Computing the average Rz persepctive-induced angle, seen on both vedrtical sides.
+    B_Rz_rad = math.atan((X_BR-X_BL)/(Y_BL-Y_BR))
+    B_Rz_deg = math.degrees(B_Rz_rad)
+    A_Rz_rad = math.atan((X_TR-X_TL)/(Y_TL-Y_TR))
+    A_Rz_deg = math.degrees(A_Rz_rad)
+
+    Rz_offset_index = round(abs((B_Rz_deg + A_Rz_deg) / 2), 1)
+    Rz_corr_needed = False
+
+    if (abs(Rz_offset_index) > 3*a_thresh):
+        Rz_corr_needed = True
+
+    corr_metrics.append(Rz_corr_needed)
+    corr_metrics.append(Rz_offset_index)
 
     #Corr_metrics contains [RoIcenter, Rx_corr_needed, Rx_offset, Ry_corr_needed, Ry_pixel_offset, ...]
     return corr_metrics
@@ -266,5 +280,7 @@ if __name__ == "__main__":
         Timer()
         print(f"Satisfaction is {satisfaction} .")
         marker_list, corr_metrics, satisfaction = NewAcquisition()
+
+
     print(corr_metrics)
     print(f"----Final satisfaction is {satisfaction}----")
