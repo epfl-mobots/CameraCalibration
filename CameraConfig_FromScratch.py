@@ -122,3 +122,4 @@ if __name__ == "__main__":
         WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
         Timer()
         marker_list, corr_metrics, satisfaction = NewAcquisition()
+        
