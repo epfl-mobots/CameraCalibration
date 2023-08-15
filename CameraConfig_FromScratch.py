@@ -110,8 +110,72 @@ def ReadMarkers():
 
 def GetCorrMetrics(marker_list):
 
+    a_thresh = 1    #1deg angular threshold
+    image_width = 1280  #Decided at top of script, to help recognize markers better.
+    p_thresh = 10   #10pixels angular thresh
+
+
     corr_metrics = []
 
+    X_BL = 0
+    X_BR = 0
+    X_TL = 0
+    X_TR = 0
+
+    Y_BL = 0
+    Y_BR = 0
+    Y_TL = 0
+    Y_TR = 0
+ 
+    for marker in marker_list:
+        if marker.role == "BL":
+            X_BL = marker.x
+            Y_BL = marker.y
+        elif marker.role == "BR":
+            X_BR = marker.x
+            Y_BR = marker.y
+        elif marker.role == "TL":
+            X_TL = marker.x
+            Y_TL = marker.y
+        elif marker.role == "TR":
+            X_TR = marker.x
+            Y_TR = marker.y
+
+
+    #Center of RoI given by the 4 markers' coordinates
+    RoI_x = round(np.mean([X_BL, X_BR, X_TL, X_TR]), 0)
+    RoI_y = round(np.mean([Y_BL, Y_BR, Y_TL, Y_TR]), 0)
+    RoIcenter = (RoI_x, RoI_y)
+
+    corr_metrics.append(RoIcenter)
+
+    #Computing the average Rx ("Twist") angle, seen from top and bottom
+    B_Rx_rad = math.atan((Y_BL-Y_BR)/(X_BR-X_BL))
+    B_Rx_deg = math.degrees(B_Rx_rad)
+    A_Rx_rad = math.atan((Y_TL-Y_TR)/(X_TR-X_TL))
+    A_Rx_deg = math.degrees(A_Rx_rad)
+
+    Rx_offset = round(abs((B_Rx_deg + A_Rx_deg) / 2), 1)
+    Rx_corr_needed = False
+
+    if (abs(Rx_offset) > a_thresh):
+        Rx_corr_needed = True
+
+    corr_metrics.append(Rx_corr_needed)
+    corr_metrics.append(Rx_offset)
+
+    #Deciding weither a correction has to be made (Ry)
+    Ry_corr_needed = False
+    Ry_pixel_offset = RoI_x - image_width/2
+
+    if (abs(Ry_pixel_offset) > p_thresh):
+        Ry_corr_needed = True
+
+    corr_metrics.append(Ry_corr_needed)
+    corr_metrics.append(Ry_pixel_offset)
+
+
+    #Corr_metrics contains [RoIcenter, Rx_corr_needed, Rx_offset, Ry_corr_needed, Ry_pixel_offset, ...]
     return corr_metrics
 
 
@@ -202,5 +266,5 @@ if __name__ == "__main__":
         Timer()
         print(f"Satisfaction is {satisfaction} .")
         marker_list, corr_metrics, satisfaction = NewAcquisition()
-
+    print(corr_metrics)
     print(f"----Final satisfaction is {satisfaction}----")
