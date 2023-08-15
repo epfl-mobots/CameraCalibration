@@ -56,12 +56,31 @@ def NewAcquisition():
         else:
             marker_list = ReadMarkers()
 
+    #Now that we are sure to have a valid New Acquisition, we can compute the overall satisfaction index
     satisfaction = GetSatisfaction(marker_list, corr_metrics)
 
     return marker_list, corr_metrics, satisfaction
 
 
 def countIsValid(marker_list):
+
+    n = 4  # Expected number of markers
+    wait_t = 3  # Waiting time in seconds
+
+    if len(marker_list) == n:
+        print("Valid marker count.")
+        return True
+
+    elif len(marker_list) == 0:
+        print("Let's do our first marker reading.")
+    elif len(marker_list) < n:
+        print("Make sure all (4) markers are visible by the camera. Not enough were recognized.")
+    else:
+        print("Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility.")
+
+    time.sleep(wait_t)
+    print("Let's see if they are all visible now.")
+    time.sleep(0.5*wait_t)
 
     return True
 
@@ -71,10 +90,25 @@ def ReadMarkers():
     marker_list = []
     corr_metrics = []
 
+    #To fill last
+
+    corr_metrics = GetCorrMetrics(marker_list)
+
+    #Print visual guides (RoI center, rectangular aligners...)
+
     return marker_list, corr_metrics
 
 
+def GetCorrMetrics(marker_list):
+
+    corr_metrics = []
+
+    return corr_metrics
+
+
+
 def GetSatisfaction(marker_list, corr_metrics):
+
 
     satisfaction = 0
 
@@ -83,6 +117,17 @@ def GetSatisfaction(marker_list, corr_metrics):
 
 
 def IntroSoft():
+
+    print("Hello, welcome to this camera setup assistant.")
+    print("Please make sure you are roughly aligned with the markers and the 4 are visible, before continuing.")
+    print("To continue, press 'C' on the keyboard (key #67).")
+  
+    while True:
+        event = keyboard.read_event()
+        
+        if event.event_type == keyboard.KEY_DOWN:
+            if event.name == 'c':
+                 return
     
     return
 
@@ -114,7 +159,7 @@ if __name__ == "__main__":
     while (satisfaction < min_satisfaction):
         count = count + 1
         if setup_stage == 0:
-            print("Let's start tuning !")
+            print("Let's (re)start a tuning cycle !")
         if count >= 10:
             print("Maximum amount of setup procedures !")
             sys.exit(1)
@@ -122,4 +167,3 @@ if __name__ == "__main__":
         WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
         Timer()
         marker_list, corr_metrics, satisfaction = NewAcquisition()
-        
