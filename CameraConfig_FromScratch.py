@@ -110,12 +110,14 @@ def ReadMarkers(setup_stage):
 
 def GetCorrMetrics(marker_list, setup_stage):
 
-    a_thresh = 1               #1deg angular threshold
     image_width = 1280         #Decided at top of script, to help recognize markers better.
-    image_height = 720         #Decided at top of script, to help recognize markers better
+    image_height = 720         #Decided at top of script, to help recognize markers better.
+    a_thresh = 1               #1deg angular threshold
     p_thresh = 10              #10pixels rotation effective offset threshold
+    percent_thresh = 0.02      #2% percentage threshold
     scale_thresh_min = 0.95    #Ratio of acceptable detected RoI area / theoretical "Ideal" RoI area, min
     scale_thresh_max = 1.05    #Ratio of acceptable detected RoI area / theoretical "Ideal" RoI area, max
+    Hor_FoV = 42               #Horizontal field of view of camera used, in degrees
 
     corr_metrics = []
 
@@ -171,12 +173,14 @@ def GetCorrMetrics(marker_list, setup_stage):
     elif setup_stage == 2 :
         Ry_corr_needed = False
         Ry_pixel_offset = RoI_x - image_width/2
+        Ry_corr_angle = math.atan(Ry_pixel_offset/(0.5*image_width*math.tan(math.radians(Hor_FoV/2))))   #Exact correction angle using the camera field of view angles
+        Ry_corr_angle = math.degrees(Ry_corr_angle)
 
-        if (abs(Ry_pixel_offset) > p_thresh):
+        if (abs(Ry_corr_angle) > a_thresh):
             Ry_corr_needed = True
 
         corr_metrics.append(Ry_corr_needed)
-        corr_metrics.append(Ry_pixel_offset)
+        corr_metrics.append(Ry_corr_angle)
 
     #Computing the average Rz persepctive-induced angle, seen on both vedrtical sides.
     elif setup_stage == 3 :
@@ -197,12 +201,13 @@ def GetCorrMetrics(marker_list, setup_stage):
     elif setup_stage == 4 :
         Ty_corr_needed = False
         Ty_pixel_offset = RoI_y - image_height/2
+        Ty_corr_percent = Ty_pixel_offset/image_height
 
-        if (abs(Ty_pixel_offset) > 0.5*p_thresh):
+        if (abs(Ty_corr_percent) > percent_thresh):
             Ty_corr_needed = True
 
         corr_metrics.append(Ty_corr_needed)
-        corr_metrics.append(Ty_pixel_offset)
+        corr_metrics.append(Ty_corr_percent)
 
     elif setup_stage == 5 :
         Tx_corr_needed = False
@@ -275,8 +280,37 @@ def IntroSoft():
 
 
 def WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage):
+
+    message = ""
     
-    return
+    if setup_stage == 0:
+        message = "Let's fix each DoF one by one."
+        return
+
+    if corr_metrics[1]==True:   #If a correction is needed
+
+        if setup_stage == 1:    #(Rx)
+            message = f"Let's fix the Rx ('Twist') angle by {corr_metrics[2]} degrees."
+        
+        if setup_stage == 2:    #(Ry)
+            message = f"Let's fix the Ry ('horizontal') angle by {corr_metrics[2]} degrees."
+        
+        if setup_stage == 3:    #(Rz)
+            message = f"Let's fix the Rz ('vertical') angle (correction index value is {corr_metrics[2]} )."
+
+        if setup_stage == 4:    #(Ty)
+            message = f"Let's fix the Ty ('vertical') height by approximatly {corr_metrics[2]*100} % of image size."
+
+        if setup_stage == 5:    #(Tx)
+            if corr_metrics[2]>1:
+                dir = f"Backwards"
+            else : 
+                dir = f"Forward"
+            message = f"Let's fix the Tx (Back/Forth) distance moving camera holder {dir} a little."
+
+    print(message)
+
+    return 
 
 
 
@@ -290,8 +324,8 @@ if __name__ == "__main__":
 
     a_thresh = 1    #1deg angular threshold
     p_thresh = 10   #10pixel angular thresh
-    min_satisfaction = 0.8
-    setup_stage = 5 #1(Rx),2(Ry),3(Rz),4(Ty),5(Tx) corresponding to each DOF currently being tuned, is ->0 when Tx is "Tuned"
+    min_satisfaction = 0.9
+    setup_stage = 0 #1(Rx),2(Ry),3(Rz),4(Ty),5(Tx) corresponding to each DOF currently being tuned, is ->0 when Tx is "Tuned"
     count = 0
 
     IntroSoft()
@@ -309,6 +343,9 @@ if __name__ == "__main__":
         Timer()
         print(f"Satisfaction is {satisfaction} .")
         marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
+
+        print(f"Correction metrics at count # {count}.")
+        print(corr_metrics)
 
 
     print(corr_metrics)
