@@ -80,10 +80,6 @@ def countIsValid(marker_list):
     else:
         print("Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility.")
 
-    # time.sleep(wait_t)
-    # print("Let's see if they are all visible now.")
-    # time.sleep(0.5*wait_t)
-
     return True
 
 
@@ -314,9 +310,6 @@ def WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage):
             message = messages.get(setup_stage, "")
         print(message)
     else:  # No correction to be made on this specific DoF
-        # if setup_stage >= 5:
-        #     return 1  # Reset to restart the setup process one more time
-        # else:
         return setup_stage + 1  # Move to the next step
 
     # +1 is To forcefully walk through all the stages even if invalid setup 
@@ -348,21 +341,18 @@ if __name__ == "__main__":
     
     while (satisfaction < min_satisfaction):
         count = count + 1
-        # if setup_stage == 0:
-        #     print("Let's (re)start a tuning cycle !")
         if count >= 10:
             print("Maximum amount of setup procedures !")
             sys.exit(1)
 
         setup_stage = WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
-        print(f"Setup Stage = {setup_stage}.")
+        # print(f"Setup Stage = {setup_stage}.")
 
         Timer()
-        # print(f"Satisfaction is {satisfaction} .")
         marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
 
-        print(f"Correction metrics at count # {count}.")
-        print(corr_metrics)
+        # print(f"Correction metrics at count # {count}.")
+        # print(corr_metrics)
 
 
     print(corr_metrics)
