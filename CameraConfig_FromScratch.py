@@ -45,9 +45,9 @@ class Marker:
 
 
 
-def NewAcquisition():
+def NewAcquisition(setup_stage):
 
-    marker_list, corr_metrics = ReadMarkers()
+    marker_list, corr_metrics = ReadMarkers(setup_stage)
 
     while not countIsValid(marker_list):
         count = count + 1
@@ -55,7 +55,7 @@ def NewAcquisition():
             print("Too many errors counting markers.")
             sys.exit(1)
         else:
-            marker_list = ReadMarkers()
+            marker_list = ReadMarkers(setup_stage)
 
     #Now that we are sure to have a valid New Acquisition, we can compute the overall satisfaction index
     satisfaction = GetSatisfaction(marker_list, corr_metrics)
@@ -87,7 +87,7 @@ def countIsValid(marker_list):
     return True
 
 
-def ReadMarkers():
+def ReadMarkers(setup_stage):
 
     marker_list = []
     corr_metrics = []
@@ -101,14 +101,14 @@ def ReadMarkers():
 
     #To fill last
 
-    corr_metrics = GetCorrMetrics(marker_list)
+    corr_metrics = GetCorrMetrics(marker_list, setup_stage)
 
     #Print visual guides (RoI center, rectangular aligners...)
 
     return marker_list, corr_metrics
 
 
-def GetCorrMetrics(marker_list):
+def GetCorrMetrics(marker_list, setup_stage):
 
     a_thresh = 1    #1deg angular threshold
     image_width = 1280  #Decided at top of script, to help recognize markers better.
@@ -150,44 +150,47 @@ def GetCorrMetrics(marker_list):
     corr_metrics.append(RoIcenter)
 
     #Computing the average Rx ("Twist") angle, seen from top and bottom
-    B_Rx_rad = math.atan((Y_BL-Y_BR)/(X_BR-X_BL))
-    B_Rx_deg = math.degrees(B_Rx_rad)
-    A_Rx_rad = math.atan((Y_TL-Y_TR)/(X_TR-X_TL))
-    A_Rx_deg = math.degrees(A_Rx_rad)
+    if setup_stage == 1 :
+        B_Rx_rad = math.atan((Y_BL-Y_BR)/(X_BR-X_BL))
+        B_Rx_deg = math.degrees(B_Rx_rad)
+        A_Rx_rad = math.atan((Y_TL-Y_TR)/(X_TR-X_TL))
+        A_Rx_deg = math.degrees(A_Rx_rad)
 
-    Rx_offset = round(abs((B_Rx_deg + A_Rx_deg) / 2), 1)
-    Rx_corr_needed = False
+        Rx_offset = round(abs((B_Rx_deg + A_Rx_deg) / 2), 1)
+        Rx_corr_needed = False
 
-    if (abs(Rx_offset) > a_thresh):
-        Rx_corr_needed = True
+        if (abs(Rx_offset) > a_thresh):
+            Rx_corr_needed = True
 
-    corr_metrics.append(Rx_corr_needed)
-    corr_metrics.append(Rx_offset)
+        corr_metrics.append(Rx_corr_needed)
+        corr_metrics.append(Rx_offset)
 
     #Deciding weither a correction has to be made (Ry)
-    Ry_corr_needed = False
-    Ry_pixel_offset = RoI_x - image_width/2
+    elif setup_stage == 2 :
+        Ry_corr_needed = False
+        Ry_pixel_offset = RoI_x - image_width/2
 
-    if (abs(Ry_pixel_offset) > p_thresh):
-        Ry_corr_needed = True
+        if (abs(Ry_pixel_offset) > p_thresh):
+            Ry_corr_needed = True
 
-    corr_metrics.append(Ry_corr_needed)
-    corr_metrics.append(Ry_pixel_offset)
+        corr_metrics.append(Ry_corr_needed)
+        corr_metrics.append(Ry_pixel_offset)
 
     #Computing the average Rz persepctive-induced angle, seen on both vedrtical sides.
-    B_Rz_rad = math.atan((X_BR-X_BL)/(Y_BL-Y_BR))
-    B_Rz_deg = math.degrees(B_Rz_rad)
-    A_Rz_rad = math.atan((X_TR-X_TL)/(Y_TL-Y_TR))
-    A_Rz_deg = math.degrees(A_Rz_rad)
+    elif setup_stage == 3 :
+        B_Rz_rad = math.atan((X_TL-X_BL)/(Y_BL-Y_TL))
+        B_Rz_deg = math.degrees(B_Rz_rad)
+        A_Rz_rad = math.atan((X_BR-X_TR)/(Y_BR-Y_TR))
+        A_Rz_deg = math.degrees(A_Rz_rad)
 
-    Rz_offset_index = round(abs((B_Rz_deg + A_Rz_deg) / 2), 1)
-    Rz_corr_needed = False
+        Rz_offset_index = round(abs((B_Rz_deg + A_Rz_deg) / 2), 1)
+        Rz_corr_needed = False
 
-    if (abs(Rz_offset_index) > 3*a_thresh):
-        Rz_corr_needed = True
+        if (abs(Rz_offset_index) > 3*a_thresh):
+            Rz_corr_needed = True
 
-    corr_metrics.append(Rz_corr_needed)
-    corr_metrics.append(Rz_offset_index)
+        corr_metrics.append(Rz_corr_needed)
+        corr_metrics.append(Rz_offset_index)
 
     #Corr_metrics contains [RoIcenter, Rx_corr_needed, Rx_offset, Ry_corr_needed, Ry_pixel_offset, ...]
     return corr_metrics
@@ -266,7 +269,7 @@ if __name__ == "__main__":
     count = 0
 
     IntroSoft()
-    marker_list, corr_metrics, satisfaction = NewAcquisition()
+    marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
     
     while (satisfaction < min_satisfaction):
         count = count + 1
@@ -279,7 +282,7 @@ if __name__ == "__main__":
         WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
         Timer()
         print(f"Satisfaction is {satisfaction} .")
-        marker_list, corr_metrics, satisfaction = NewAcquisition()
+        marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
 
 
     print(corr_metrics)
