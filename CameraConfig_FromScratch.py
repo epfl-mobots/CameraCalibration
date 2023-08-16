@@ -58,7 +58,7 @@ def NewAcquisition(setup_stage):
             marker_list = ReadMarkers(setup_stage)
 
     #Now that we are sure to have a valid New Acquisition, we can compute the overall satisfaction index
-    satisfaction = GetSatisfaction(marker_list, corr_metrics)
+    satisfaction, _ = GetSatisfaction(marker_list, corr_metrics)
     print("Valid Acquisition")
 
     return marker_list, corr_metrics, satisfaction
@@ -110,10 +110,12 @@ def ReadMarkers(setup_stage):
 
 def GetCorrMetrics(marker_list, setup_stage):
 
-    a_thresh = 1    #1deg angular threshold
-    image_width = 1280  #Decided at top of script, to help recognize markers better.
-    p_thresh = 10   #10pixels angular thresh
-
+    a_thresh = 1               #1deg angular threshold
+    image_width = 1280         #Decided at top of script, to help recognize markers better.
+    image_height = 720         #Decided at top of script, to help recognize markers better
+    p_thresh = 10              #10pixels rotation effective offset threshold
+    scale_thresh_min = 0.95    #Ratio of acceptable detected RoI area / theoretical "Ideal" RoI area, min
+    scale_thresh_max = 1.05    #Ratio of acceptable detected RoI area / theoretical "Ideal" RoI area, max
 
     corr_metrics = []
 
@@ -192,6 +194,27 @@ def GetCorrMetrics(marker_list, setup_stage):
         corr_metrics.append(Rz_corr_needed)
         corr_metrics.append(Rz_offset_index)
 
+    elif setup_stage == 4 :
+        Ty_corr_needed = False
+        Ty_pixel_offset = RoI_y - image_height/2
+
+        if (abs(Ty_pixel_offset) > 0.5*p_thresh):
+            Ty_corr_needed = True
+
+        corr_metrics.append(Ty_corr_needed)
+        corr_metrics.append(Ty_pixel_offset)
+
+    elif setup_stage == 5 :
+        Tx_corr_needed = False
+        _, scale_factor = GetSatisfaction(marker_list, corr_metrics)
+        if (scale_factor > scale_thresh_max):
+            Tx_corr_needed = True
+        if (scale_factor < scale_thresh_min):
+            Tx_corr_needed = True
+
+        corr_metrics.append(Tx_corr_needed)
+        corr_metrics.append(scale_factor)
+
     #Corr_metrics contains [RoIcenter, Rx_corr_needed, Rx_offset, Ry_corr_needed, Ry_pixel_offset, ...]
     return corr_metrics
 
@@ -222,6 +245,9 @@ def GetSatisfaction(marker_list, corr_metrics):
         print("Ideal polygon is invalid!")
         sys.exit(1)
 
+    #Scale factor
+    scale_factor = detected_polygon.area/ideal_polygon.area
+
     # Calculate the overlapping/union area
     intersection_area = detected_polygon.intersection(ideal_polygon).area
     union_polygon = detected_polygon.union(ideal_polygon)
@@ -230,7 +256,7 @@ def GetSatisfaction(marker_list, corr_metrics):
     # Calculate satisfaction as the ratio of overlap to ideal area
     satisfaction = intersection_area / union_area
 
-    return satisfaction
+    return satisfaction, scale_factor
 
 
 def IntroSoft():
@@ -265,7 +291,7 @@ if __name__ == "__main__":
     a_thresh = 1    #1deg angular threshold
     p_thresh = 10   #10pixel angular thresh
     min_satisfaction = 0.8
-    setup_stage = 0 #1(Rx),2(Ry),3(Rz),4(Tz),5(Tx) corresponding to each DOF currently being tuned, is ->0 when Tx is "Tuned"
+    setup_stage = 5 #1(Rx),2(Ry),3(Rz),4(Ty),5(Tx) corresponding to each DOF currently being tuned, is ->0 when Tx is "Tuned"
     count = 0
 
     IntroSoft()
