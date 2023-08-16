@@ -80,9 +80,9 @@ def countIsValid(marker_list):
     else:
         print("Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility.")
 
-    time.sleep(wait_t)
-    print("Let's see if they are all visible now.")
-    time.sleep(0.5*wait_t)
+    # time.sleep(wait_t)
+    # print("Let's see if they are all visible now.")
+    # time.sleep(0.5*wait_t)
 
     return True
 
@@ -280,42 +280,57 @@ def IntroSoft():
 
 
 def WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage):
-
-    message = ""
+    """
+    Walks through the setup stages and suggests necessary corrections based on the given metrics.
     
-    if setup_stage == 0:
-        message = "Let's fix each DoF one by one."
-        return
+    :param marker_list: List of markers
+    :param corr_metrics: Metrics that indicate the corrections required
+    :param satisfaction: (not used in this function but left for consistency with other functions)
+    :param setup_stage: Current stage of the setup
+    
+    :return: Updated setup stage
+    """
+    if setup_stage > 5:
+            return 1
+    
+    # Safety check
+    if len(corr_metrics) < 3:
+        print("Error: corr_metrics doesn't have enough data!")
+        return setup_stage  # Just return the current stage without changes
 
-    if corr_metrics[1]==True:   #If a correction is needed
+    messages = {
+        1: f"Let's fix the Rx ('Twist') angle by {corr_metrics[2]} degrees.",
+        2: f"Let's fix the Ry ('horizontal') angle by {corr_metrics[2]} degrees.",
+        3: f"Let's fix the Rz ('vertical') angle (correction index value is {corr_metrics[2]}).",
+        4: f"Let's fix the Ty ('vertical') height by approximately {corr_metrics[2]*100} % of image size.",
+        5: None  # Handled separately due to specific Tx behavior
+    }
 
-        if setup_stage == 1:    #(Rx)
-            message = f"Let's fix the Rx ('Twist') angle by {corr_metrics[2]} degrees."
-        
-        if setup_stage == 2:    #(Ry)
-            message = f"Let's fix the Ry ('horizontal') angle by {corr_metrics[2]} degrees."
-        
-        if setup_stage == 3:    #(Rz)
-            message = f"Let's fix the Rz ('vertical') angle (correction index value is {corr_metrics[2]} )."
+    if corr_metrics[1]:  # If a correction is needed
+        if setup_stage == 5:  # Special handling for stage 5
+            dir = "Backwards" if corr_metrics[2] > 1 else "Forward"
+            message = f"Let's fix the Tx (Back/Forth) distance by moving the camera holder {dir} a little."
+        else:
+            message = messages.get(setup_stage, "")
+        print(message)
+    else:  # No correction to be made on this specific DoF
+        # if setup_stage >= 5:
+        #     return 1  # Reset to restart the setup process one more time
+        # else:
+        return setup_stage + 1  # Move to the next step
 
-        if setup_stage == 4:    #(Ty)
-            message = f"Let's fix the Ty ('vertical') height by approximatly {corr_metrics[2]*100} % of image size."
-
-        if setup_stage == 5:    #(Tx)
-            if corr_metrics[2]>1:
-                dir = f"Backwards"
-            else : 
-                dir = f"Forward"
-            message = f"Let's fix the Tx (Back/Forth) distance moving camera holder {dir} a little."
-
-    print(message)
-
-    return 
+    # +1 is To forcefully walk through all the stages even if invalid setup 
+    return setup_stage + 1
 
 
 
 def Timer():
 
+    wait_t = 3   #3s
+    time.sleep(wait_t)
+    print("New Camera footage Acquisition upcoming !")
+    time.sleep(0.5*wait_t)
+    
     return
 
 
@@ -325,7 +340,7 @@ if __name__ == "__main__":
     a_thresh = 1    #1deg angular threshold
     p_thresh = 10   #10pixel angular thresh
     min_satisfaction = 0.9
-    setup_stage = 0 #1(Rx),2(Ry),3(Rz),4(Ty),5(Tx) corresponding to each DOF currently being tuned, is ->0 when Tx is "Tuned"
+    setup_stage = 1 #1(Rx),2(Ry),3(Rz),4(Ty),5(Tx) corresponding to each DOF currently being tuned, is ->0 when Tx is "Tuned"
     count = 0
 
     IntroSoft()
@@ -333,15 +348,17 @@ if __name__ == "__main__":
     
     while (satisfaction < min_satisfaction):
         count = count + 1
-        if setup_stage == 0:
-            print("Let's (re)start a tuning cycle !")
+        # if setup_stage == 0:
+        #     print("Let's (re)start a tuning cycle !")
         if count >= 10:
             print("Maximum amount of setup procedures !")
             sys.exit(1)
 
-        WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
+        setup_stage = WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
+        print(f"Setup Stage = {setup_stage}.")
+
         Timer()
-        print(f"Satisfaction is {satisfaction} .")
+        # print(f"Satisfaction is {satisfaction} .")
         marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
 
         print(f"Correction metrics at count # {count}.")
