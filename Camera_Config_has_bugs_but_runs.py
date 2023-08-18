@@ -8,7 +8,7 @@ from object_detector import *
 
 # Load Aruco detector
 parameters = cv2.aruco.DetectorParameters_create()
-aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_50)
+aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 
 # Load Object Detector
 detector = HomogeneousBgDetector()
