@@ -17,8 +17,8 @@ detector = HomogeneousBgDetector()
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-#Image Loading (if using a single image)
-#img = cv2.imread("phone_aruco_marker.jpg")   #define image to analyse
+
+n_markers = 4  # Expected number of markers
 
 class Marker:
     def __init__(self, x, y, ID):
@@ -46,7 +46,7 @@ class Marker:
 
 def GetValidAcquisition(setup_stage):
     '''
-    Returns a valid acquisition of 
+    Returns a valid acquisition of markers from the camera.
     '''
     MAX_RETRIES = 5
     count = 0
@@ -62,7 +62,7 @@ def GetValidAcquisition(setup_stage):
             print("Too many errors counting markers.")
             sys.exit(1)
         
-        Timer()
+        Wait()
 
     print("Valid Acquisition")
 
@@ -70,26 +70,28 @@ def GetValidAcquisition(setup_stage):
 
 
 
-def countIsValid(marker_list, text_wanted=False):
-    n = 4  # Expected number of markers
+def countIsValid(marker_list):
+    '''
+    Verifies that the right number of markers were detected in marker_list.
+    '''
     
     marker_count = len(marker_list)
-    
-    if marker_count == n:
-        if text_wanted:
-            print("Valid marker count.")
+
+    if marker_count == 0:
+        print("No markers detected.")
+        return False
+    elif marker_count != n_markers:
+        print(f"Detected {marker_count} markers but expected {n_markers}.")
+        return False
+    else:
         return True
 
-    if text_wanted:
-        if marker_count == 0:
-            print("Let's do our first marker reading.")
-        elif marker_count < n:
-            print(f"Make sure all ({n}) markers are visible by the camera. Not enough were recognized.")
-        else:
-            print("Error in marker recognition. Too many were recognized. Make sure the camera has proper visibility.")
-    
-    return False
-
+def ImageAcquisition():
+    '''
+    Makes the acquisition of  a picture from the RPi Cam v3.
+    '''
+    picture = np.zeros(2)
+    return picture
 
 
 def ReadMarkers(setup_stage):
@@ -105,16 +107,16 @@ def ReadMarkers(setup_stage):
     marker_list = []
 
     # Detect Aruco markers
-    corners, ids, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
+    marker_corners, ids, _ = cv2.aruco.detectMarkers(img, aruco_dict, parameters=parameters)
     
     if ids is not None:
-        for i, corner in enumerate(corners):
-            int_corner = np.int32(corner)
-            center = tuple(np.mean(int_corner[0], axis=0).astype(int))
+        for i, corners in enumerate(marker_corners):
+            corners_int = np.int32(corners)
+            center = tuple(np.mean(corners_int[0], axis=0).astype(int))
             marker = Marker(center[0], center[1], ids[i][0])
             marker_list.append(marker)
 
-            cv2.polylines(img, [int_corner], True, (0, 255, 0), 5)
+            cv2.polylines(img, [corners_int], True, (0, 255, 0), 5)
             cv2.circle(img, center, 5, (0, 0, 255), -1)
             cv2.putText(img, "ID: " + str(ids[i][0]), (center[0] - 20, center[1] + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 
@@ -194,14 +196,6 @@ def GetSatisfaction(marker_list):
     if not countIsValid(marker_list):
         return 0, 0
 
-    # Define ideal frame markers
-    IdealFrame_marker_list = [
-        Marker(0, 0, 1),    # TL
-        Marker(10, 0, 2),   # TR
-        Marker(10, 10, 3),  # BR
-        Marker(0, 10, 4)    # BL
-    ]
-
     # Define the custom order using a dictionary
     role_order = {"BL": 1, "BR": 2, "TR": 3, "TL": 4}
 
@@ -225,7 +219,7 @@ def GetSatisfaction(marker_list):
 
 
 
-def Timer():
+def Wait():
 
     wait_t = 3   #3s
     time.sleep(wait_t)
@@ -234,12 +228,9 @@ def Timer():
     
     return
 
-
-
-def IntroSoft():
+def Intro():
     print("Hello, welcome to this camera setup assistant.")
     print("Please make sure you are roughly aligned with the markers and the 4 are visible, before continuing.")
-
 
 
 def WalkThroughSetup(corr_metrics, setup_stage):
@@ -288,22 +279,27 @@ if __name__ == "__main__":
     setup_stage = 1
     max_attempts = 20
 
-    IntroSoft()
-    marker_list, corr_metrics = GetValidAcquisition(setup_stage)
-    satisfaction, _ = GetSatisfaction(marker_list)
-    
-    for attempt in range(max_attempts):
-        if satisfaction >= min_satisfaction:
-            break
+    Intro()
 
-        setup_stage = WalkThroughSetup(corr_metrics, setup_stage)
-
-        Timer()
+    try:
+        img=ImageAcquisition()
         marker_list, corr_metrics = GetValidAcquisition(setup_stage)
+        satisfaction, _ = GetSatisfaction(marker_list)
+        
+        for attempt in range(max_attempts):
+            if satisfaction >= min_satisfaction:
+                break
 
-    else:
-        print("Maximum amount of setup procedures reached!")
-        sys.exit(1)
+            setup_stage = WalkThroughSetup(corr_metrics, setup_stage)
 
-    print(corr_metrics)
-    print(f"----Final satisfaction is {satisfaction}----")
+            Wait()
+            marker_list, corr_metrics = GetValidAcquisition(setup_stage)
+
+        else:
+            print("Maximum amount of setup procedures reached!")
+            sys.exit(1)
+
+        print(corr_metrics)
+        print(f"----Final satisfaction is {satisfaction}----")
+    except KeyboardInterrupt:
+        print("Camera calibration process stopped by user - ctrl-c pressed.")
