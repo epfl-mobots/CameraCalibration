@@ -77,13 +77,22 @@ def read_markers():
             marker = Marker(center[0], center[1], ids[i][0])           
             marker_list.append(marker)
 
-            # Draw red circle at the center
+            # Draw red circle at the center of each marker
             cv2.circle(img, center, 5, (0, 0, 255), -1)
-                
+                        
             # Display the marker ID
             cv2.putText(img, "ID: " + str(ids[i][0]), (center[0] - 20, center[1] + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-                
 
+
+
+    Rx_offset, RoI_x, RoI_y = ComputeMetrics(marker_list)
+    
+    # Convert the RoI_x and RoI_y values to integers.
+    RoI_x = int(RoI_x)
+    RoI_y = int(RoI_y)
+
+    RoIcenter = (RoI_x, RoI_y)
+    cv2.circle(img, RoIcenter, 5, (0, 0, 255), -1)  # Draw RoI circle
 
     cv2.imshow("Image", img)
     key = cv2.waitKey(1000)
@@ -91,7 +100,7 @@ def read_markers():
         cap.release()
         cv2.destroyAllWindows()
 
-    return marker_list
+    return marker_list,
 
 
 
@@ -147,18 +156,11 @@ def NewAcquisition():
 
     return marker_list
 
-def Rx_Feedback(marker_list):
 
-    X_BL = 0
-    X_BR = 0
-    X_TL = 0
-    X_TR = 0
+def ComputeMetrics(marker_list):
+    X_BL, X_BR, X_TL, X_TR = 0, 0, 0, 0
+    Y_BL, Y_BR, Y_TL, Y_TR = 0, 0, 0, 0
 
-    Y_BL = 0
-    Y_BR = 0
-    Y_TL = 0
-    Y_TR = 0
- 
     for marker in marker_list:
         if marker.role == "BL":
             X_BL = marker.x
@@ -173,20 +175,14 @@ def Rx_Feedback(marker_list):
             X_TR = marker.x
             Y_TR = marker.y
 
-    #Computing the average Rx ("Twist") angle, seen from top and bottom
     B_Rx_rad = math.atan((Y_BL-Y_BR)/(X_BR-X_BL))
     B_Rx_deg = math.degrees(B_Rx_rad)
     A_Rx_rad = math.atan((Y_TL-Y_TR)/(X_TR-X_TL))
     A_Rx_deg = math.degrees(A_Rx_rad)
     Rx_offset = round(abs((B_Rx_deg + A_Rx_deg) / 2), 1)
 
-    #Center of RoI given by the 4 markers' coordinates
     RoI_x = round(np.mean([X_BL, X_BR, X_TL, X_TR]), 0)
     RoI_y = round(np.mean([Y_BL, Y_BR, Y_TL, Y_TR]), 0)
-
-    # ret, img = cap.read()
-    # RoIcenter = (RoI_x, RoI_y)
-    # cv2.circle(img, RoIcenter, 5, (0, 0, 255), -1)
 
     return Rx_offset, RoI_x, RoI_y  
 
@@ -197,7 +193,7 @@ if __name__ == "__main__":
     intro_soft()
     marker_list = NewAcquisition()
 
-    Rx_offset, RoI_x, RoI_y = Rx_Feedback(marker_list)
+    Rx_offset, RoI_x, RoI_y = ComputeMetrics(marker_list)
 
     print(f"Twist camera along Rx = {Rx_offset} degrees")
     if abs(Rx_offset) > 1:
