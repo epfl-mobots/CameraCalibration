@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import keyboard
 import time
 import math
 import sys
@@ -45,7 +44,10 @@ class Marker:
 
 
 
-def NewAcquisition(setup_stage):
+def GetValidAcquisition(setup_stage):
+    '''
+    Returns a valid acquisition of 
+    '''
     MAX_RETRIES = 5
     count = 0
 
@@ -62,10 +64,9 @@ def NewAcquisition(setup_stage):
         
         Timer()
 
-    satisfaction, _ = GetSatisfaction(marker_list)
     print("Valid Acquisition")
 
-    return marker_list, corr_metrics, satisfaction
+    return marker_list, corr_metrics
 
 
 
@@ -238,18 +239,14 @@ def Timer():
 def IntroSoft():
     print("Hello, welcome to this camera setup assistant.")
     print("Please make sure you are roughly aligned with the markers and the 4 are visible, before continuing.")
-    print("To continue, press 'C' on the keyboard (key #67).")
-    
-    while not keyboard.is_pressed('c'):
-        pass
 
 
 
-def WalkThroughSetup(marker_list, corr_metrics, _, setup_stage):
+def WalkThroughSetup(corr_metrics, setup_stage):
     """
+    TODO: change name to something more appropriate
     Walks through the setup stages and suggests necessary corrections based on the given metrics.
     
-    :param marker_list: List of markers
     :param corr_metrics: Metrics that indicate the corrections required
     :param _: Unused parameter (for consistency with other functions)
     :param setup_stage: Current stage of the setup
@@ -292,16 +289,17 @@ if __name__ == "__main__":
     max_attempts = 20
 
     IntroSoft()
-    marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
+    marker_list, corr_metrics = GetValidAcquisition(setup_stage)
+    satisfaction, _ = GetSatisfaction(marker_list)
     
     for attempt in range(max_attempts):
         if satisfaction >= min_satisfaction:
             break
 
-        setup_stage = WalkThroughSetup(marker_list, corr_metrics, satisfaction, setup_stage)
+        setup_stage = WalkThroughSetup(corr_metrics, setup_stage)
 
         Timer()
-        marker_list, corr_metrics, satisfaction = NewAcquisition(setup_stage)
+        marker_list, corr_metrics, satisfaction = GetValidAcquisition(setup_stage)
 
     else:
         print("Maximum amount of setup procedures reached!")
@@ -309,151 +307,3 @@ if __name__ == "__main__":
 
     print(corr_metrics)
     print(f"----Final satisfaction is {satisfaction}----")
-
-
-#---------------------------------------------------------------------------
-#Last execution output :
-# Hello, welcome to this camera setup assistant.
-# Please make sure you are roughly aligned with the markers and the 4 are visible, before continuing.
-# To continue, press 'C' on the keyboard (key #67).
-# Let's do our first marker reading.
-# New Camera footage Acquisition upcoming !
-# Let's do our first marker reading.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Rx ('Twist') angle by 1.7 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Rx ('Twist') angle by 3.7 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Rx ('Twist') angle by 1.6 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ry ('horizontal') angle by 9.47468937506772 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ry ('horizontal') angle by 8.564759657459422 degrees.
-# New Camera footage Acquisition upcoming !
-# Make sure all (4) markers are visible by the camera. Not enough were recognized.
-# New Camera footage Acquisition upcoming !
-# Make sure all (4) markers are visible by the camera. Not enough were recognized.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ry ('horizontal') angle by 9.701438460180064 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ry ('horizontal') angle by 12.174067712705273 degrees.
-# New Camera footage Acquisition upcoming !
-# Make sure all (4) markers are visible by the camera. Not enough were recognized.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ry ('horizontal') angle by 6.041224574091831 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ry ('horizontal') angle by -2.796413860931324 degrees.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Rz ('vertical') angle (correction index value is 88.5).
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ty ('vertical') height by approximately 8.75 % of image size.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Ty ('vertical') height by approximately 3.888888888888889 % of image size.
-# New Camera footage Acquisition upcoming !
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# New Camera footage Acquisition upcoming !
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Tx (Back/Forth) distance by moving the camera holder Backwards a little.
-# New Camera footage Acquisition upcoming !
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Tx (Back/Forth) distance by moving the camera holder Backwards a little.
-# New Camera footage Acquisition upcoming !
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Tx (Back/Forth) distance by moving the camera holder Backwards a little.
-# New Camera footage Acquisition upcoming !
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Let's fix the Tx (Back/Forth) distance by moving the camera holder Backwards a little.
-# New Camera footage Acquisition upcoming !
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid marker count.
-# C:\Users\41787\anaconda3\envs\CameraConfig\Lib\site-packages\shapely\set_operations.py:133: RuntimeWarning: invalid value encountered in intersection
-#   return lib.intersection(a, b, **kwargs)
-# Valid Acquisition
-# Maximum amount of setup procedures reached!

@@ -83,6 +83,9 @@ def GetSatisfaction(marker_list, corr_metrics):
 
 
 def IntroSoft():
+    '''
+    This function will take ... as an input and ouput ...s
+    '''
     
     return
 
