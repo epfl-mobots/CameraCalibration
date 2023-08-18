@@ -25,9 +25,12 @@ class Marker:
         self.x = x
         self.y = y
         self.ID = ID
-        self.role = self.assign_role()
+        self.role = self.assign_position()
 
-    def assign_role(self):
+    def assign_position(self):
+        '''
+        Assigns a position to the marker based on its ID
+        '''
         if self.ID == 1:
             return "TL"
         elif self.ID == 2:
@@ -188,6 +191,8 @@ def Rx_Feedback(marker_list):
     # cv2.circle(img, RoIcenter, 5, (0, 0, 255), -1)
 
     return Rx_offset, RoI_x, RoI_y  
+
+
 
 if __name__ == "__main__":
 
