@@ -25,9 +25,12 @@ class Marker:
         self.x = x
         self.y = y
         self.ID = ID
-        self.role = self.assign_role()
+        self.role = self.assign_position()
 
-    def assign_role(self):
+    def assign_position(self):
+        '''
+        Assigns a position to the marker based on its ID
+        '''
         if self.ID == 1:
             return "TL"
         elif self.ID == 2:
@@ -185,6 +188,8 @@ def ComputeMetrics(marker_list):
     RoI_y = round(np.mean([Y_BL, Y_BR, Y_TL, Y_TR]), 0)
 
     return Rx_offset, RoI_x, RoI_y  
+
+
 
 if __name__ == "__main__":
 
