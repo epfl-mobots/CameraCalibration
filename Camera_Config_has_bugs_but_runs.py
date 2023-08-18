@@ -13,11 +13,6 @@ aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 # Load Object Detector
 detector = HomogeneousBgDetector()
 
-# Load Camera Footage
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
 n_markers = 4  # Expected number of markers
 
 class Marker:
@@ -48,19 +43,13 @@ def GetValidAcquisition(setup_stage):
     '''
     Returns a valid acquisition of markers from the camera.
     '''
-    MAX_RETRIES = 5
-    count = 0
 
-    while True:
+    valid_img = False
+    while not valid_img:
+        img = ImageAcquisition()
         marker_list, corr_metrics = ReadMarkers(setup_stage)
         
-        if countIsValid(marker_list, True) or count >= MAX_RETRIES:
-            break
-        
-        count += 1
-        if count == MAX_RETRIES:
-            print("Too many errors counting markers.")
-            sys.exit(1)
+        valid_img = countIsValid(marker_list)
         
         Wait()
 
@@ -94,16 +83,7 @@ def ImageAcquisition():
     return picture
 
 
-def ReadMarkers(setup_stage):
-    if not cap.isOpened():
-        print("Error: Camera not initialized properly.")
-        return [], []
-
-    ret, img = cap.read()
-    if not ret or img is None:
-        print("Error: Failed to read frame from camera.")
-        return [], []
-
+def ReadMarkers(img,setup_stage):
     marker_list = []
 
     # Detect Aruco markers
@@ -233,13 +213,11 @@ def Intro():
     print("Please make sure you are roughly aligned with the markers and the 4 are visible, before continuing.")
 
 
-def WalkThroughSetup(corr_metrics, setup_stage):
+def SendInstructions(corr_metrics, setup_stage):
     """
-    TODO: change name to something more appropriate
     Walks through the setup stages and suggests necessary corrections based on the given metrics.
     
     :param corr_metrics: Metrics that indicate the corrections required
-    :param _: Unused parameter (for consistency with other functions)
     :param setup_stage: Current stage of the setup
     
     :return: Updated setup stage
@@ -263,11 +241,11 @@ def WalkThroughSetup(corr_metrics, setup_stage):
     if corr_metrics[1]:  # If a correction is needed
         message = messages.get(setup_stage)
         if setup_stage == 5:
-            dir = "Backwards" if corr_metrics[2] > 1 else "Forward"
-            message = f"Let's fix the Tx (Back/Forth) distance by moving the camera holder {dir} a little."
+            dir = "Backwards" if corr_metrics[2] > 1 else "Forwards"
+            message = f"Let's fix the Tx (Back/Forth) distance by moving the camera holder {dir}."
         print(message)
     else:
-        return setup_stage + 1
+        return (setup_stage + 1)%6
 
     return setup_stage
 
@@ -275,31 +253,26 @@ def WalkThroughSetup(corr_metrics, setup_stage):
 
 if __name__ == "__main__":
 
+    satisfaction = 0
     min_satisfaction = 0.9
     setup_stage = 1
-    max_attempts = 20
 
     Intro()
 
     try:
-        img=ImageAcquisition()
-        marker_list, corr_metrics = GetValidAcquisition(setup_stage)
-        satisfaction, _ = GetSatisfaction(marker_list)
-        
-        for attempt in range(max_attempts):
-            if satisfaction >= min_satisfaction:
-                break
+        while satisfaction < min_satisfaction:
+            img=ImageAcquisition()
+            marker_list, corr_metrics = GetValidAcquisition(setup_stage)
+            satisfaction, _ = GetSatisfaction(marker_list)
 
-            setup_stage = WalkThroughSetup(corr_metrics, setup_stage)
+            setup_stage = SendInstructions(corr_metrics, setup_stage)
 
             Wait()
             marker_list, corr_metrics = GetValidAcquisition(setup_stage)
 
-        else:
-            print("Maximum amount of setup procedures reached!")
-            sys.exit(1)
-
-        print(corr_metrics)
-        print(f"----Final satisfaction is {satisfaction}----")
+            print(corr_metrics)
+            print(f"----Final satisfaction is {satisfaction}----")
     except KeyboardInterrupt:
         print("Camera calibration process stopped by user - ctrl-c pressed.")
+    finally:
+        cv2.destroyAllWindows()
