@@ -299,7 +299,7 @@ if __name__ == "__main__":
         setup_stage = WalkThroughSetup(corr_metrics, setup_stage)
 
         Timer()
-        marker_list, corr_metrics, satisfaction = GetValidAcquisition(setup_stage)
+        marker_list, corr_metrics = GetValidAcquisition(setup_stage)
 
     else:
         print("Maximum amount of setup procedures reached!")
