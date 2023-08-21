@@ -41,13 +41,14 @@ class Marker:
 
 def GetValidAcquisition(setup_stage):
     '''
-    Returns a valid acquisition of markers from the camera.
+    Verifies if an image is valid by exctracting Fiducial markers and checking that it has.
     '''
+
 
     valid_img = False
     while not valid_img:
         img = ImageAcquisition()
-        marker_list, corr_metrics = ReadMarkers(setup_stage)
+        marker_list, corr_metrics = ReadMarkers(img,setup_stage)
         
         valid_img = countIsValid(marker_list)
         
@@ -82,8 +83,15 @@ def ImageAcquisition():
     picture = np.zeros(2)
     return picture
 
+def drawFeedback():
+    '''
+    Draws the feedback image.
+    '''
 
-def ReadMarkers(img,setup_stage):
+    return
+
+
+def ReadMarkers(img):
     marker_list = []
 
     # Detect Aruco markers
@@ -98,15 +106,12 @@ def ReadMarkers(img,setup_stage):
 
             cv2.polylines(img, [corners_int], True, (0, 255, 0), 5)
             cv2.circle(img, center, 5, (0, 0, 255), -1)
-            cv2.putText(img, "ID: " + str(ids[i][0]), (center[0] - 20, center[1] + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            cv2.putText(img, "ID: " + str(ids[i][0]), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 
-    corr_metrics = GetCorrMetrics(marker_list, setup_stage) if countIsValid(marker_list) else []
+    # corr_metrics = GetCorrMetrics(marker_list, setup_stage) if countIsValid(marker_list) else [] to be used elsewhere
 
     cv2.imshow("Image", img)
-    key = cv2.waitKey(1)
-    if key == 27:
-        cap.release()
-        cv2.destroyAllWindows()
+ 
 
     # Assuming you will implement visual guides later based on the comment
     # Print visual guides (RoI center, rectangular aligners...)
@@ -254,14 +259,15 @@ def SendInstructions(corr_metrics, setup_stage):
 if __name__ == "__main__":
 
     satisfaction = 0
-    min_satisfaction = 0.9
     setup_stage = 1
+    perfect_run = False
 
     Intro()
 
     try:
-        while satisfaction < min_satisfaction:
-            img=ImageAcquisition()
+        while not perfect_run:
+            perfect_run = True # Any error will set this to False
+
             marker_list, corr_metrics = GetValidAcquisition(setup_stage)
             satisfaction, _ = GetSatisfaction(marker_list)
 
