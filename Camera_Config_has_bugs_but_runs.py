@@ -5,6 +5,7 @@ import math
 import sys
 from shapely.geometry import Polygon
 from object_detector import *
+from picamera2 import Picamera2, Preview
 
 # Load Aruco detector
 parameters = cv2.aruco.DetectorParameters_create()
