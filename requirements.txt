@@ -16,7 +16,6 @@ keyboard==0.13.5
 numpy==1.25.2
 #opencv-contrib-python==4.6.0.66 Install with pip
 packaging==23.1
-picamera==1.13 # Only available on linux
 pip==23.2.1
 pluggy==1.2.0
 pycosat==0.6.4
