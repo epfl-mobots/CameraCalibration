@@ -6,11 +6,12 @@ import sys
 from shapely.geometry import Polygon
 from object_detector import *
 from picamera2 import Picamera2, Preview
+from marker import Marker
 
 # To test on laptop first through imageAcquisition (Debugg) then RPi when yril finds his way.
 
-IMAGE_WIDTH = 1280
-IMAGE_HEIGHT = 720
+IMAGE_WIDTH = 4608
+IMAGE_HEIGHT = 2592
 A_THRESH = 1
 P_THRESH = 10
 PERCENT_THRESH = 0.02
@@ -19,6 +20,14 @@ SCALE_THRESH_MAX = 1.05
 HOR_FoV = 42
 N_MARKERS = 4  # Expected number of markers
 
+# Hard coded ideal frame, BEWARE !
+IdealFrame_marker_list = [
+    Marker(0, 0, 1),    # TL
+    Marker(10, 0, 2),   # TR
+    Marker(10, 10, 3),  # BR
+    Marker(0, 10, 4)    # BL
+    ]
+
 # Load Aruco detector
 parameters = cv2.aruco.DetectorParameters_create()
 aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
@@ -26,28 +35,8 @@ aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 # Load Object Detector
 detector = HomogeneousBgDetector()
 
-class Marker:
-    def __init__(self, x, y, ID):
-        self.x = x
-        self.y = y
-        self.ID = ID
-        self.role = self.assign_role()
-
-    def assign_role(self):
-        if self.ID == 1:
-            return "TL"
-        elif self.ID == 2:
-            return "TR"
-        elif self.ID == 3:
-            return "BR"
-        elif self.ID == 4:
-            return "BL"
-        else:
-            return "Unknown"
-
-    def __repr__(self):
-        return f"Marker(ID: {self.ID}, Position: ({self.x}, {self.y}), Role: {self.role})"
-
+# Camera object
+picam2 = Picamera2()
 
 
 def GetValidAcquisition():
@@ -86,12 +75,19 @@ def countIsValid(marker_list):
     else:
         return True
 
+def InitCamera():
+
+    picam2.start()
+
+    return
+
 def ImageAcquisition():
     '''
     Makes the acquisition of  a picture from the RPi Cam v3. 
     TODO: Implement the acquisition from the RPi Cam v3.
     '''
-    picture = np.zeros(2)   #Fill in the function with acutal camera acquisition on RPi using libcamera
+    picture = picam2.capture_array()
+    
     return picture
 
 def drawFeedback(img, marker_list):     # add corr_metrics if drawing visual feedback
@@ -186,6 +182,8 @@ def GetSatisfaction(marker_list):
 
     #ADD IDEAL MARKER LIST LIKE IN PREVIOUS, BUT GLOBAL VARIABLE -> Look at commit Cyril review
 
+
+
     # Define the custom order using a dictionary
     role_order = {"BL": 1, "BR": 2, "TR": 3, "TL": 4}
 
@@ -254,6 +252,7 @@ if __name__ == "__main__":
     marker_list = []
 
     Intro()
+    InitCamera()
 
     try:
         while not perfect_run:
