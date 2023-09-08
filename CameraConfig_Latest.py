@@ -29,7 +29,7 @@ IdealFrame_marker_list = [
 
 # Load Aruco detector
 parameters = cv2.aruco.DetectorParameters_create()
-aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_50)
+aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 
 # Load Object Detector
 detector = HomogeneousBgDetector()
@@ -50,7 +50,7 @@ def GetValidAcquisition():
         
         valid_img = countIsValid(marker_list)
         
-        time.sleep(0.75)   # Wait for 0.75 seconds before trying again
+        time.sleep(0.3)  # Wait for 0.75 seconds before trying again
 
     print("Valid Acquisition")
 
@@ -93,7 +93,7 @@ def ImageAcquisition():
     
     return picture
 
-def drawFeedback(img, marker_list):     # add corr_metrics if drawing visual feedback
+def drawFeedback(img, marker_list, message):     # add corr_metrics if drawing visual feedback
     '''
     Draws the feedback image.
     '''
@@ -102,12 +102,17 @@ def drawFeedback(img, marker_list):     # add corr_metrics if drawing visual fee
     # Print visual guides (RoI center, rectangular aligners...)
 
     for marker in marker_list:
-        cv2.putText(img, "ID: " + str(marker.ID), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-        cv2.circle(img, (marker.x, marker.y), 5, (0, 0, 255), -1)
+        cv2.putText(img, "ID: " + str(marker.ID), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+        cv2.circle(img, (marker.x, marker.y), 10, (0, 0, 255), -1)
+    for marker in IdealFrame_marker_list:
+        cv2.putText(img, "Ideal " + str(marker.role), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+        cv2.circle(img, (marker.x, marker.y), 10, (0, 0, 255), -1)
+        
+    #Printing message directly on image
+    cv2.putText(img, message, (500, 500), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
     
     # Resizing feedback image not to be bigger than the screen used (defaulted to HD)
     img_resized = cv2.resize(img, (1280, 780))
-    
     cv2.imshow(winname="Feedback iage", mat=img_resized)
     cv2.waitKey(10)
         
@@ -240,12 +245,15 @@ def SendInstructions(img, corr_metrics, setup_stage):
             message = f"Let's fix the Tx (Back/Forth) distance by moving the camera holder {dir}."
         print(message)
     else:
-        return (setup_stage + 1), False
-    
+        message = f"No message"
+        return (setup_stage + 1), False, message 
+        
+    if message is None:
+        message = f"No message"
 
     # drawFeedback(img, marker_list) # To be implemented later
 
-    return setup_stage, corr_metrics[1]
+    return setup_stage, corr_metrics[1], message
 
 #-----------------------------------------------------------------
 
@@ -271,13 +279,13 @@ if __name__ == "__main__":
                 satisfaction, _ = GetSatisfaction(marker_list)
 
                 corr_metrics = GetCorrMetrics(marker_list, setup_stage)
-                setup_stage, change_needed = SendInstructions(img, corr_metrics, setup_stage)
+                setup_stage, change_needed, message = SendInstructions(img, corr_metrics, setup_stage)
 
                 if change_needed:
                     perfect_run = False
 
-                time.sleep(0.75)
-                drawFeedback(img, marker_list)  # Could add corre_metrics for visual feedback
+                time.sleep(0.3)
+                drawFeedback(img, marker_list, message)  # Could add corre_metrics for visual feedback
 
             setup_stage = 0
         
