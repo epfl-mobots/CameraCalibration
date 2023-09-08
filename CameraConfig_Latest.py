@@ -8,7 +8,6 @@ from object_detector import *
 from picamera2 import Picamera2, Preview
 from marker import Marker
 
-# To test on laptop first through imageAcquisition (Debugg) then RPi when yril finds his way.
 
 IMAGE_WIDTH = 4608
 IMAGE_HEIGHT = 2592
@@ -22,15 +21,15 @@ N_MARKERS = 4  # Expected number of markers
 
 # Hard coded ideal frame, BEWARE !
 IdealFrame_marker_list = [
-    Marker(0, 0, 1),    # TL
-    Marker(10, 0, 2),   # TR
-    Marker(10, 10, 3),  # BR
-    Marker(0, 10, 4)    # BL
+    Marker(461, 260, 1),    # TL
+    Marker(4147, 260, 2),   # TR
+    Marker(4147, 2333, 3),  # BR
+    Marker(461, 2333, 4)    # BL
     ]
 
 # Load Aruco detector
 parameters = cv2.aruco.DetectorParameters_create()
-aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_50)
 
 # Load Object Detector
 detector = HomogeneousBgDetector()
@@ -76,8 +75,12 @@ def countIsValid(marker_list):
         return True
 
 def InitCamera():
-
+    config=picam2.create_still_configuration()
+    print(config)
+    picam2.configure(config)
     picam2.start()
+    time.sleep(1)
+    print("Camera configured")
 
     return
 
@@ -101,8 +104,15 @@ def drawFeedback(img, marker_list):     # add corr_metrics if drawing visual fee
     for marker in marker_list:
         cv2.putText(img, "ID: " + str(marker.ID), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         cv2.circle(img, (marker.x, marker.y), 5, (0, 0, 255), -1)
-
-        cv2.imshow(winname="Feedback iage", mat=img)
+    
+    # Resizing feedback image not to be bigger than the screen used (defaulted to HD)
+    img_resized = cv2.resize(img, (1280, 780))
+    
+    cv2.imshow(winname="Feedback iage", mat=img_resized)
+    cv2.waitKey(10)
+        
+        
+    print(f"Feedback image drawn ({len(marker_list)} markers)", img.shape)
 
     return
 
@@ -179,11 +189,6 @@ def GetSatisfaction(marker_list):
     Computes a satisfaction metric based on the detected markers and the ideal markers.
     '''
 
-
-    #ADD IDEAL MARKER LIST LIKE IN PREVIOUS, BUT GLOBAL VARIABLE -> Look at commit Cyril review
-
-
-
     # Define the custom order using a dictionary
     role_order = {"BL": 1, "BR": 2, "TR": 3, "TL": 4}
 
@@ -255,6 +260,9 @@ if __name__ == "__main__":
     InitCamera()
 
     try:
+        #img =
+        #cv2.show(img)
+        
         while not perfect_run:
             perfect_run = True # Any error will set this to False
 
