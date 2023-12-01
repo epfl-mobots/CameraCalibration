@@ -102,18 +102,18 @@ def drawFeedback(img, marker_list, message):     # add corr_metrics if drawing v
     # Print visual guides (RoI center, rectangular aligners...)
 
     for marker in marker_list:
-        cv2.putText(img, "ID: " + str(marker.ID), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+        cv2.putText(img, "ID: " + str(marker.ID), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
         cv2.circle(img, (marker.x, marker.y), 10, (0, 0, 255), -1)
     for marker in IdealFrame_marker_list:
-        cv2.putText(img, "Ideal " + str(marker.role), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+        cv2.putText(img, "Ideal " + str(marker.role), (marker.x - 20, marker.y + 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
         cv2.circle(img, (marker.x, marker.y), 10, (0, 0, 255), -1)
         
     #Printing message directly on image
-    cv2.putText(img, message, (500, 500), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+    cv2.putText(img, message, (500, 500), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 5)
     
-    # Resizing feedback image not to be bigger than the screen used (defaulted to HD)
-    img_resized = cv2.resize(img, (1280, 780))
-    cv2.imshow(winname="Feedback iage", mat=img_resized)
+    # Resizing feedback image not to be bigger than the screen used (defaulted to UHD)
+    img_resized = cv2.resize(img, (1920, 1080))
+    cv2.imshow(winname="Feedback image", mat=img_resized)
     cv2.waitKey(10)
         
         
@@ -167,6 +167,7 @@ def GetCorrMetrics(marker_list, setup_stage):
     elif setup_stage == 1:
         Ry_pixel_offset = RoI_x - IMAGE_WIDTH/2
         Ry_corr_angle = math.degrees(math.atan(Ry_pixel_offset / (0.5 * IMAGE_WIDTH * math.tan(math.radians(HOR_FoV/2)))))
+        Ry_corr_angle = round(Ry_corr_angle, 1)
         corr_metrics.extend([abs(Ry_corr_angle) > A_THRESH, Ry_corr_angle])
 
     elif setup_stage == 2:

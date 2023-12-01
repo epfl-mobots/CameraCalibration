@@ -4,8 +4,8 @@ certifi==2023.7.22
 cffi==1.15.1
 charset-normalizer==3.2.0
 colorama==0.4.6
-conda==23.7.2
-conda-package-handling==2.2.0
+#conda==23.7.2
+#conda-package-handling==2.2.0
 #conda_package_streaming==0.9.0 Install with pip
 cryptography==41.0.2
 idna==3.4
@@ -14,15 +14,15 @@ jsonpointer==2.0
 keyboard==0.13.5
 # menuinst==1.4.19 Unavailable anywhere (tried anaconda, conda-forge, pip) on MAC OSX M2
 numpy==1.25.2
-#opencv-contrib-python==4.6.0.66 Install with pip
+opencv-contrib-python==4.6.0.66
 packaging==23.1
 pip==23.2.1
 pluggy==1.2.0
-pycosat==0.6.4
+#pycosat==0.6.4
 pycparser==2.21
-pyobjc-core==9.2
-pyobjc-framework-Cocoa==9.2
-pyobjc-framework-Quartz==9.2
+#pyobjc-core==9.2
+#pyobjc-framework-Cocoa==9.2
+#pyobjc-framework-Quartz==9.2
 pyOpenSSL==23.2.0
 PySocks==1.7.1
 requests==2.31.0
