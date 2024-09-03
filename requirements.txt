@@ -1,6 +1,6 @@
 boltons @ file:///home/conda/feedstock_root/build_artifacts/boltons_1677499911949/work
 Brotli @ file:///C:/ci_311/brotli-split_1676435766766/work
-certifi==2023.7.22
+certifi==2024.7.4
 cffi @ file:///C:/ci_311/cffi_1676423759166/work
 charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1688813409104/work
 colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1666700638685/work
