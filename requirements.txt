@@ -13,7 +13,7 @@ jsonpatch @ file:///home/conda/feedstock_root/build_artifacts/jsonpatch_16327592
 jsonpointer==2.0
 menuinst @ file:///D:/bld/menuinst_1666840069166/work
 numpy==1.25.2
-opencv-contrib-python==4.6.0.66
+opencv-contrib-python==4.8.1.78
 packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1681337016113/work
 pluggy @ file:///home/conda/feedstock_root/build_artifacts/pluggy_1687776318736/work
 pycosat @ file:///C:/ci_311/pycosat_1676438455539/work
